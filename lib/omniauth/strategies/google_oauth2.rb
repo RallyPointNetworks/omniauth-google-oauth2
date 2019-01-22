@@ -50,21 +50,29 @@ module OmniAuth
         })
       end
 
+      # 2019-01-10 https://github.com/zquestz/omniauth-google-oauth2/commit/e3cbdc512a020249e201300df01ed4ddde78d176
+      USER_INFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'.freeze
+
+
       extra do
         hash = {}
         hash[:id_token] = access_token['id_token']
         hash[:raw_info] = raw_info unless skip_info?
-        hash[:raw_friend_info] = raw_friend_info(raw_info['sub']) unless skip_info? || options[:skip_friends]
+        # 2019-01-10 hash[:raw_friend_info] = raw_friend_info(raw_info['sub']) unless skip_info? || options[:skip_friends]
         prune! hash
       end
 
       def raw_info
-        @raw_info ||= access_token.get('https://www.googleapis.com/plus/v1/people/me/openIdConnect').parsed
+        f = File.open('/tmp/omni-auth-old-calls.txt', 'a')
+        f.puts("#{Time.now}")
+        f.close
+
+        @raw_info ||= access_token.get(USER_INFO_URL).parsed
       end
 
-      def raw_friend_info(id)
-        @raw_friend_info ||= access_token.get("https://www.googleapis.com/plus/v1/people/#{id}/people/visible").parsed
-      end
+      # 2019-01-10 def raw_friend_info(id)
+      #  @raw_friend_info ||= access_token.get("https://www.googleapis.com/plus/v1/people/#{id}/people/visible").parsed
+      # end
 
       def custom_build_access_token
         if request.xhr? && request.params['code']
